@@ -1,0 +1,9 @@
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888
+  application:
+    name: gateway-service
+  data:
+    redis:
+      host: localhost
+      port: 6379

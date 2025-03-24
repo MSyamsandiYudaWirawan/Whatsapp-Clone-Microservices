@@ -1,0 +1,46 @@
+server:
+  port: 8222
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:9098/realms/micro-services"
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user-service
+          uri: lb:http://USER-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+
+
+        - id: chat-service
+          uri: lb:http://CHAT-SERVICE
+          predicates:
+            - Path=/api/v1/chats/**
+        - id: chat-message-service
+          uri: lb:http://CHAT-SERVICE
+          predicates:
+            - Path=/api/v1/messages/chat/**
+
+
+        - id: group-chat-service
+          uri: lb:http://GROUP-CHAT-SERVICE
+          predicates:
+            - Path=/api/v1/group-chats/**
+
+
+        - id: group-chat-message-service
+          uri: lb:http://GROUP-CHAT-SERVICE
+          predicates:
+            - Path=/api/v1/messages/group-chats/**
