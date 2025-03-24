@@ -1,0 +1,109 @@
+services:
+  postgres_user:
+    container_name: ms_pg_user
+    image: postgres
+    environment:
+      POSTGRES_USER: syamsandi
+      POSTGRES_PASSWORD: syamsandi
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_user:/var/lib/postgresql/data
+    ports:
+      #user-service 5433
+      #chat-service 5434
+      #group-chat-service 5435
+      - 5433:5432
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  postgres_chat:
+    container_name: ms_pg_chat
+    image: postgres
+    environment:
+      POSTGRES_USER: syamsandi
+      POSTGRES_PASSWORD: syamsandi
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_chat:/var/lib/postgresql/data
+    ports:
+      - 5434:5432
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  postgres_group_chat:
+    container_name: ms_pg_group_chat
+    image: postgres
+    environment:
+      POSTGRES_USER: syamsandi
+      POSTGRES_PASSWORD: syamsandi
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_group_chat:/var/lib/postgresql/data
+    ports:
+      - 5435:5432
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+    networks:
+      - microservices-net
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: ms_kafka
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+    networks:
+      - microservices-net
+
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+    networks:
+      - microservices-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak
+    container_name: ms_keycloak
+    ports:
+      - 9098:8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - microservices-net
+    command:
+      - "start-dev"
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  postgres_user:
+  postgres_chat:
+  postgres_group_chat:
