@@ -52,6 +52,7 @@ public class Chat extends BaseAuditingEntity {
 
     @Transient
     public Long getUnreadMessages(final String currUserId) {
+        //todo query in database for performance
         return messages
                 .stream()
                 .filter(m -> m.getReceiverId().equals(currUserId))
