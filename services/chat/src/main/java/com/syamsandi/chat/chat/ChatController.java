@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/chats")
@@ -16,17 +17,20 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping
-    public ResponseEntity<StringResponse> createChat(@RequestParam("sender-id") String senderId,
+    public CompletableFuture<ResponseEntity<StringResponse>> createChat(@RequestParam("sender-id") String senderId,
                                                      @RequestParam("receiver-id") String receiverId) {
-        final String chatId = chatService.createChat(senderId, receiverId);
-        StringResponse response = StringResponse.builder()
-                .response(chatId)
-                .build();
-        return ResponseEntity.ok(response);
+        return chatService.createChatAsync(senderId, receiverId).thenApply(
+                chatId -> {
+                    StringResponse stringResponse = StringResponse.builder()
+                            .response(chatId)
+                            .build();
+                    return ResponseEntity.ok(stringResponse);
+                }
+        );
     }
 
     @GetMapping
-    private ResponseEntity<List<ChatResponse>> getChatsByReceiver(Authentication authentication) {
-        return ResponseEntity.ok(chatService.getChatByCurrentUserId(authentication));
+    private CompletableFuture<ResponseEntity<List<ChatResponse>>> getChatsByReceiver(Authentication authentication) {
+        return chatService.getChatByCurrentUserIdAsync(authentication).thenApply(ResponseEntity::ok);
     }
 }
